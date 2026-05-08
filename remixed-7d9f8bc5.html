@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digvijay Shukla — Video Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+:root {
+  --black:  #080808;
+  --panel:  #111111;
+  --border: #1e1e1e;
+  --faint:  #252525;
+  --muted:  #444;
+  --dim:    #6a6a6a;
+  --light:  #b8b8b8;
+  --white:  #eeeeee;
+}
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 28px;
+  background: var(--black);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 3px; color: var(--white); text-decoration: none;
+}
+.nav-links { display: flex; gap: 22px; }
+.nav-links a {
+  font-size: 8.5px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color .15s;
+}
+.nav-links a:hover { color: var(--white); }
+@media(max-width:600px){ .nav-links { display: none; } nav { padding: 12px 18px; } }
+
+/* HERO — compact */
+.hero {
+  padding: 72px 28px 36px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-top {
+  display: flex; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.hero-label, .hero-time {
+  font-size: 8.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+}
+.hero-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 10vw, 96px);
+  line-height: .9; letter-spacing: 2px; color: var(--white);
+  margin-bottom: 16px;
+}
+.hero-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 24px; flex-wrap: wrap;
+  border-top: 1px solid var(--border); padding-top: 16px;
+}
+.hero-bio {
+  font-size: 11px; color: var(--dim); line-height: 1.75; max-width: 420px;
+}
+.hero-bio strong { color: var(--light); font-weight: 400; }
+.hero-stats { display: flex; flex-direction: column; min-width: 260px; }
+.hs {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 9.5px;
+}
+.hs .k { color: var(--muted); }
+.hs .v { color: var(--light); text-align: right; }
+
+/* SECTION */
+.sec { border-bottom: 1px solid var(--border); padding: 0 28px; }
+.sec-head {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 22px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+.sec-num { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.sec-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: 1.5px; color: var(--white);
+}
+.sec-tag { font-size: 8.5px; color: var(--muted); margin-left: auto; }
+
+/* SUBSECTION */
+.subsec { border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.subsec:last-child { border-bottom: none; }
+.subsec-label {
+  font-size: 7.5px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--muted); padding: 10px 0 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* GRID — 3 cols, 16:9 horizontal cards */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 12px 0;
+}
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+@media(max-width:800px){ .grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:480px){ .grid, .grid-2 { grid-template-columns: 1fr; } }
+
+/* CARD */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.card:hover { border-color: #3a3a3a; }
+
+/* 16:9 frame */
+.card-frame {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #0e0e0e;
+  overflow: hidden;
+}
+.card-frame iframe {
+  width: 100%; height: 100%; border: none; display: block;
+}
+
+/* placeholder shown offline */
+.card-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  background: var(--panel);
+}
+.card-placeholder .play {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--faint);
+  display: flex; align-items: center; justify-content: center;
+}
+.card-placeholder .play svg { margin-left: 2px; }
+.card-placeholder p {
+  font-size: 7.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+}
+
+.card-body { padding: 9px 11px 11px; }
+.card-tag { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.card-title { font-size: 11px; color: var(--white); margin: 3px 0 2px; line-height: 1.3; }
+.card-sub { font-size: 9px; color: var(--muted); }
+.card-link {
+  display: inline-block; margin-top: 8px;
+  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--dim); text-decoration: none; transition: color .15s;
+}
+.card-link:hover { color: var(--white); }
+
+/* CONTACT */
+.contact {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.contact-l {
+  padding: 40px 28px;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; justify-content: space-between; gap: 24px;
+}
+.contact-r {
+  padding: 40px 28px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 24px;
+}
+.contact-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(34px, 5vw, 52px);
+  letter-spacing: 2px; line-height: .92; color: var(--white);
+}
+.contact-avail { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.clinks { display: flex; flex-direction: column; gap: 3px; }
+.clinks a { font-size: 11px; color: var(--dim); text-decoration: none; transition: color .15s; }
+.clinks a:hover { color: var(--white); }
+.contact-loc { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+@media(max-width:600px){
+  .contact { grid-template-columns: 1fr; }
+  .contact-l { border-right: none; border-bottom: 1px solid var(--border); }
+}
+
+/* FOOTER */
+footer {
+  display: flex; justify-content: space-between;
+  padding: 12px 28px;
+  font-size: 8px; letter-spacing: 1px; color: var(--muted);
+}
+@media(max-width:600px){ footer { flex-direction: column; gap: 3px; padding: 12px 18px; } }
+
+/* REVEAL */
+.r { opacity:0; transform:translateY(12px); transition: opacity .45s ease, transform .45s ease; }
+.r.on { opacity:1; transform:none; }
+.d1{transition-delay:.04s} .d2{transition-delay:.08s} .d3{transition-delay:.12s}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">DIGVIJAY SHUKLA</a>
+  <div class="nav-links">
+    <a href="#ads">Ads</a>
+    <a href="#beinghuman">Being Human</a>
+    <a href="#apple">Apple</a>
+    <a href="#reels">Reels</a>
+    <a href="#mokobara">Mokobara</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-top">
+    <span class="hero-label">Video Editor · Cinematographer</span>
+    <span class="hero-time" id="clock"></span>
+  </div>
+  <h1 class="hero-name">DIGVIJAY<br>SHUKLA</h1>
+  <div class="hero-row">
+    <p class="hero-bio">
+      Crafting content that moves people. Currently editing for <strong>STAGE.in</strong>.
+      Worked with <strong>Apple, Being Human, GQ, ASUS, Mokobara</strong> and more.
+      5+ years shaping how audiences first feel a story.
+    </p>
+    <div class="hero-stats">
+      <div class="hs"><span class="k">Current</span><span class="v">Promo Editor, STAGE.in</span></div>
+      <div class="hs"><span class="k">Based</span><span class="v">Mumbai, India</span></div>
+      <div class="hs"><span class="k">Experience</span><span class="v">5+ Years</span></div>
+      <div class="hs"><span class="k">Software</span><span class="v">Premiere · After Effects · DaVinci</span></div>
+      <div class="hs"><span class="k">Available</span><span class="v">Freelance &amp; Full-time</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 01 ADS -->
+<section class="sec r" id="ads">
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <span class="sec-title">Ads</span>
+    <span class="sec-tag">Salt Oral Care</span>
+  </div>
+  <div class="subsec">
+    <div class="subsec-label">Salt Oral Care</div>
+    <div class="grid grid-2">
+      <div class="card r d1">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DSaLcr4DdHz/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder">
+            <div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div>
+            <p>Open on Netlify to preview</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Ad Film</div>
+          <div class="card-title">Salt Oral Care × Film Trailer</div>
+          <div class="card-sub">Brand Ad · Product Launch</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DSaLcr4DdHz/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d2">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DLJwgCLSs3_/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder">
+            <div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div>
+            <p>Open on Netlify to preview</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Ad Film</div>
+          <div class="card-title">Salt Oral Care — Main Ad Film</div>
+          <div class="card-sub">Brand Ad · Hero Film</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DLJwgCLSs3_/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 BEING HUMAN -->
+<section class="sec r" id="beinghuman">
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <span class="sec-title">Being Human</span>
+    <span class="sec-tag">Salman Khan · Alizé Agnihotri · Fantastic 4</span>
+  </div>
+  <div class="subsec">
+    <div class="subsec-label">Celebrity Films</div>
+    <div class="grid">
+      <div class="card r d1">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DU-kihhjeOE/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Film</div>
+          <div class="card-title">Being Human × Alizé Agnihotri</div>
+          <div class="card-sub">Fashion · Campaign</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DU-kihhjeOE/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d2">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DUyC9rlDJzo/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Film</div>
+          <div class="card-title">Being Human × Salman Khan</div>
+          <div class="card-sub">Celebrity · Campaign</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DUyC9rlDJzo/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d3">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DPd_G-EjFge/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Film</div>
+          <div class="card-title">Being Human × Salman × Alizé</div>
+          <div class="card-sub">Collab · Campaign</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DPd_G-EjFge/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="subsec">
+    <div class="subsec-label">Special Campaigns</div>
+    <div class="grid grid-2">
+      <div class="card r d1">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DUtAQQKDKnm/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">IP Collab</div>
+          <div class="card-title">Being Human × Fantastic 4</div>
+          <div class="card-sub">Brand Crossover</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DUtAQQKDKnm/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d2">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/p/DP8SWpZgIIH/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Campaign</div>
+          <div class="card-title">Being Human × Smile Campaign</div>
+          <div class="card-sub">Cause · Brand</div>
+          <a class="card-link" href="https://www.instagram.com/p/DP8SWpZgIIH/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 APPLE -->
+<section class="sec r" id="apple">
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <span class="sec-title">Apple</span>
+    <span class="sec-tag">MAMI · Filmed on iPhone 2026</span>
+  </div>
+  <div class="subsec">
+    <div class="subsec-label">Apple × MAMI Film Festival</div>
+    <div class="grid grid-2">
+      <div class="card r d1">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DQmJedHjd_G/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Apple · BTS Trailer</div>
+          <div class="card-title">Apple × MAMI — BTS Trailer</div>
+          <div class="card-sub">Filmed on iPhone 2026</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DQmJedHjd_G/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d2">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DLHFjlaoASP/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Apple · Main BTS Film</div>
+          <div class="card-title">Apple × MAMI — Main BTS Film</div>
+          <div class="card-sub">Filmed on iPhone 2026 · Documentary</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DLHFjlaoASP/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 REELS -->
+<section class="sec r" id="reels">
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <span class="sec-title">Reels</span>
+    <span class="sec-tag">Tiger Shroff · Aditya Roy Kapoor · Ishan Khattar</span>
+  </div>
+  <div class="subsec">
+    <div class="subsec-label">Brand × Celebrity</div>
+    <div class="grid">
+      <div class="card r d1">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DMFrX7GMeg_/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Reel</div>
+          <div class="card-title">ASUS × Tiger Shroff</div>
+          <div class="card-sub">Tech · Brand Campaign</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DMFrX7GMeg_/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d2">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DQR2t6xE7bN/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Reel</div>
+          <div class="card-title">Scoott Eyewear × Aditya Roy Kapoor</div>
+          <div class="card-sub">Fashion · Brand Reel</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DQR2t6xE7bN/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d3">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DRPLuLYjK1B/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Editorial</div>
+          <div class="card-title">GQ × BOSS × Ishan Khattar</div>
+          <div class="card-sub">Fashion · Editorial</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DRPLuLYjK1B/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 MOKOBARA -->
+<section class="sec r" id="mokobara">
+  <div class="sec-head">
+    <span class="sec-num">05</span>
+    <span class="sec-title">Mokobara</span>
+    <span class="sec-tag">Kenny Sebastian · Kusha Kapila · Sufi Motiwala</span>
+  </div>
+  <div class="subsec">
+    <div class="subsec-label">Mokobara × Creators</div>
+    <div class="grid">
+      <div class="card r d1">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DRBsiE9gexg/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Series</div>
+          <div class="card-title">Mokobara × Kenny Sebastian</div>
+          <div class="card-sub">Travel · Brand Film</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DRBsiE9gexg/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d2">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DRUO5lvkgc5/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Series</div>
+          <div class="card-title">Mokobara × Kusha Kapila</div>
+          <div class="card-sub">Lifestyle · Brand Film</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DRUO5lvkgc5/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+      <div class="card r d3">
+        <div class="card-frame">
+          <iframe src="https://www.instagram.com/reel/DRJwFOuiEd0/embed" allowfullscreen loading="lazy" scrolling="no"></iframe>
+          <div class="card-placeholder"><div class="play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1L9 6L1 11V1Z" fill="#444"/></svg></div><p>Open on Netlify to preview</p></div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Brand Series</div>
+          <div class="card-title">Mokobara × Sufi Motiwala</div>
+          <div class="card-sub">Creator · Brand Film</div>
+          <a class="card-link" href="https://www.instagram.com/reel/DRJwFOuiEd0/" target="_blank">View on Instagram ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact r" id="contact">
+  <div class="contact-l">
+    <h2 class="contact-title">LET'S MAKE<br>SOMETHING<br>GREAT.</h2>
+    <p class="contact-avail">Open to new work</p>
+  </div>
+  <div class="contact-r">
+    <div>
+      <p style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Get in touch</p>
+      <div class="clinks">
+        <a href="tel:+918224082348">+91 8224082348</a>
+        <a href="mailto:digvijay0701@gmail.com">digvijay0701@gmail.com</a>
+        <a href="https://instagram.com/digvijay_shukla_7" target="_blank">@digvijay_shukla_7</a>
+      </div>
+    </div>
+    <p class="contact-loc">Mumbai, India</p>
+  </div>
+</section>
+
+<footer>
+  <span>© 2025 Digvijay Shukla — Video Editor</span>
+  <span>Mumbai, India</span>
+</footer>
+
+<script>
+function tick(){
+  const t = new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'});
+  const el = document.getElementById('clock');
+  if(el) el.textContent = 'Mumbai ' + t + ' IST';
+}
+tick(); setInterval(tick, 1000);
+
+// Hide placeholder once iframe loads
+document.querySelectorAll('.card-frame iframe').forEach(iframe => {
+  iframe.addEventListener('load', () => {
+    const ph = iframe.parentElement.querySelector('.card-placeholder');
+    if(ph) ph.style.display = 'none';
+  });
+});
+
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); }});
+},{threshold:0.04});
+document.querySelectorAll('.r').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
